@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AntChat WebSocket Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 20px;">
+<h2>Test Cổng WebSocket AntChat 🐜</h2>
+
+<div>
+    <button id="connectBtn" onclick="connect()">1. Kết nối đến Server</button>
+    <button id="disconnectBtn" onclick="disconnect()" disabled>Ngắt kết nối</button>
+</div>
+<br>
+
+<div id="chatArea" style="display:none;">
+    <input type="text" id="messageInput" placeholder="Nhập tin nhắn test...">
+    <button onclick="sendMessage()">2. Gửi tin nhắn</button>
+    <ul id="messagesList" style="background: #f4f4f4; padding: 10px; min-height: 100px;"></ul>
+</div>
+
+<script>
+    var stompClient = null;
+
+    function connect() {
+        // Trỏ đến đúng cánh cửa "/ws" mà chúng ta đã cấu hình
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            document.getElementById('connectBtn').disabled = true;
+            document.getElementById('disconnectBtn').disabled = false;
+            document.getElementById('chatArea').style.display = 'block';
+
+            // Đăng ký nghe trên "loa phường" /topic/public
+            stompClient.subscribe('/topic/public', function (response) {
+                showMessage(response.body);
+            });
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        document.getElementById('connectBtn').disabled = false;
+        document.getElementById('disconnectBtn').disabled = true;
+        document.getElementById('chatArea').style.display = 'none';
+        console.log("Disconnected");
+    }
+
+    function sendMessage() {
+        var messageContent = document.getElementById('messageInput').value;
+        // Gửi tin nhắn đến quầy tiếp tân "/app/test.chat"
+        stompClient.send("/app/test.chat", {}, messageContent);
+        document.getElementById('messageInput').value = '';
+    }
+
+    function showMessage(message) {
+        var list = document.getElementById('messagesList');
+        var li = document.createElement('li');
+        li.appendChild(document.createTextNode(message));
+        list.appendChild(li);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: antchat_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: antchat_user
+      POSTGRES_PASSWORD: antchat_password
+      POSTGRES_DB: antchat_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis Pub/Sub & Cache
+  redis:
+    image: redis:7-alpine
+    container_name: antchat_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass "redis_password"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
